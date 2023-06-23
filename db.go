@@ -17,9 +17,9 @@ func NewDB(path string) (WalDB, error) {
 	if err != nil {
 		return WalDB{}, err
 	}
-	// db.Exec("PRAGMA auto_vacuum = FULL")
-	// db.Exec("PRAGMA synchronous = NORMAL")
-	// db.Exec("PRAGMA journal_mode = WAL")
+	db.Exec("PRAGMA auto_vacuum = FULL")
+	db.Exec("PRAGMA synchronous = NORMAL")
+	db.Exec("PRAGMA journal_mode = WAL")
 	return WalDB{path, db}, nil
 }
 
