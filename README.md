@@ -1,5 +1,11 @@
 # d-dns-proxy
 
+## Compile
+```bash
+go mod tidy
+go build .
+```
+
 ## Steps
 1. Please specify the dep-dns-chain URL. By default, the local chain (ws://127.0.0.1:9944) will be used.
 
