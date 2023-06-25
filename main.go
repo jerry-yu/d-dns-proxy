@@ -58,7 +58,9 @@ func main() {
 	flag.StringVar(&url, "url", config.Default().RPCURL, "Chain url")
 	flag.UintVar(&port, "port", 8888, "Listen Port")
 	flag.StringVar(&db_path, "db_path", "./record.db", "path of DB file")
+	flag.Parse()
 
+	log.Println(url)
 	wal_db, err := NewDB(db_path)
 	if err != nil {
 		panic(err)
