@@ -103,6 +103,7 @@ func (s *DomainServer) GetSnapshot(w http.ResponseWriter, req *http.Request) {
 	s.mutex.RUnlock()
 
 	snapshot := SnapshotResponse{
+		Version: s.version,
 		Records: arr,
 	}
 
