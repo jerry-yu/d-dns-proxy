@@ -59,7 +59,6 @@ func main() {
 	flag.UintVar(&port, "port", 8888, "Listen Port")
 	flag.StringVar(&db_path, "db_path", "./record.db", "path of DB file")
 
-	log.Println(db_path)
 	wal_db, err := NewDB(db_path)
 	if err != nil {
 		panic(err)
@@ -72,8 +71,9 @@ func main() {
 	}
 
 	version, m := wal_db.LoadRecords()
+	log.Println("From Db records: ", m)
 	m_chain := GetLatestRecords(url)
-	log.Println(m_chain)
+	log.Println("From Chain records: ", m_chain)
 
 	new_version := init_records(wal_db, m, m_chain, version)
 

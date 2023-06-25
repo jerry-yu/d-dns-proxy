@@ -97,7 +97,6 @@ func (wal WalDB) UpdateV(version uint64) error {
 }
 
 func (wal WalDB) LoadRecords() (uint64, map[string]string) {
-	log.Println("LoadRecords")
 	rows, err := wal.DB.Query("SELECT address, ip FROM records")
 	if err != nil {
 		log.Println(err)
@@ -129,10 +128,8 @@ func (wal WalDB) LoadVersion() uint64 {
 		log.Println(err)
 		return 0
 	}
-	log.Println("$$$$$$$$$$$$$$$$$$$$$$$", version)
 	if v_row.Next() {
 		v_row.Scan(&version)
 	}
-	log.Println("$$$$$$$$$$$$$$$$$$$$$$$", version)
 	return version
 }

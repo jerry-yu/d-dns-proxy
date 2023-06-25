@@ -134,10 +134,6 @@ func (s *DomainServer) RecvRecord() {
 				log.Fatal(err)
 			}
 		}
-
-		log.Println("&&&&&&&&&&&&&&&&", s.version)
-
-		log.Println("&&&&&&&&&&&&&&&&vvvvvv", s.Db.LoadVersion())
 		s.mutex.Unlock()
 	}
 }
