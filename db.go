@@ -56,26 +56,6 @@ func (wal WalDB) Delete(address string) error {
 	return nil
 }
 
-// func (wal WalDB) Begin() error {
-// 	_, err := wal.DB.Exec("begin")
-// 	log.Println("0000000-- Begin")
-// 	if err != nil {
-// 		log.Println(err)
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func (wal WalDB) End() error {
-// 	_, err := wal.DB.Exec("end")
-// 	log.Println("0000000-- End")
-// 	if err != nil {
-// 		log.Println(err)
-// 		return err
-// 	}
-// 	return nil
-// }
-
 func (wal WalDB) Tx_insert(address string, ip string, version uint64) error {
 	_, err := wal.DB.Exec("begin;insert or replace into records (address ,ip ) values(?,?);update versions set version = ?;end;",
 		address, ip, version)

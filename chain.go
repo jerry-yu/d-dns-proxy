@@ -47,26 +47,22 @@ func ChianWorking(url string, rchain chan<- RecordOp) {
 func ChainClientStart(url string, rchain chan<- RecordOp) error {
 	api, err := gsrpc.NewSubstrateAPI(url)
 	if err != nil {
-
 		return err
 	}
 
 	meta, err := api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	// Subscribe to system events via storage
 	key, err := types.CreateStorageKey(meta, "System", "Events", nil)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 
 	sub, err := api.RPC.State.SubscribeStorageRaw([]types.StorageKey{key})
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	defer sub.Unsubscribe()
@@ -83,12 +79,11 @@ func ChainClientStart(url string, rchain chan<- RecordOp) error {
 				events := MyEvent{}
 				err = types.EventRecordsRaw(chng.StorageData).DecodeEventRecords(meta, &events)
 				if err != nil {
-					log.Fatal(err)
+					return err
 				}
 
 				for _, e := range events.DepDns_DnsRecord {
-
-					log.Println(e)
+					log.Println(e.Name, e.Value)
 					if e.RecordType == 1 {
 						op := RecordOp{
 							Flag:    true,
@@ -97,7 +92,6 @@ func ChainClientStart(url string, rchain chan<- RecordOp) error {
 						}
 						rchain <- op
 					}
-
 				}
 
 				for _, e := range events.DepDns_DnsRecordRemoved {
@@ -109,11 +103,16 @@ func ChainClientStart(url string, rchain chan<- RecordOp) error {
 						rchain <- op
 					}
 				}
-
+				for _, e := range events.DepDns_CancelDomain {
+					op := RecordOp{
+						Flag:    false,
+						Address: e.Name,
+					}
+					rchain <- op
+				}
 			}
 		case err := <-sub.Err():
 			{
-				log.Println(err)
 				return err
 			}
 		}
