@@ -87,6 +87,6 @@ func main() {
 		records:     m_chain,
 		Db:          wal_db,
 	}
-	go ChainClientStart(url, jobs)
+	go ChianWorking(url, jobs)
 	d.StartServer()
 }

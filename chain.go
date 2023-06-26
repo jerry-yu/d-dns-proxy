@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"log"
 	"strings"
+	"time"
 
 	gsrpc "github.com/centrifuge/go-substrate-rpc-client/v4"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
@@ -35,67 +36,88 @@ func GetLatestRecords(url string) map[string]string {
 	return m
 }
 
-func ChainClientStart(url string, rchain chan<- RecordOp) {
+func ChianWorking(url string, rchain chan<- RecordOp) {
+	for {
+		err := ChainClientStart(url, rchain)
+		log.Println(err)
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func ChainClientStart(url string, rchain chan<- RecordOp) error {
 	api, err := gsrpc.NewSubstrateAPI(url)
 	if err != nil {
-		log.Fatal(err)
+
+		return err
 	}
 
 	meta, err := api.RPC.State.GetMetadataLatest()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 
 	// Subscribe to system events via storage
 	key, err := types.CreateStorageKey(meta, "System", "Events", nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 
 	sub, err := api.RPC.State.SubscribeStorageRaw([]types.StorageKey{key})
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	defer sub.Unsubscribe()
 
 	// outer for loop for subscription notifications
 	for {
-		set := <-sub.Chan()
-		for _, chng := range set.Changes {
-			if !codec.Eq(chng.StorageKey, key) || !chng.HasStorageData {
-				continue
-			}
+		select {
+		case set := <-sub.Chan():
+			for _, chng := range set.Changes {
+				if !codec.Eq(chng.StorageKey, key) || !chng.HasStorageData {
+					continue
+				}
 
-			events := MyEvent{}
-			err = types.EventRecordsRaw(chng.StorageData).DecodeEventRecords(meta, &events)
-			if err != nil {
-				log.Fatal(err)
-			}
+				events := MyEvent{}
+				err = types.EventRecordsRaw(chng.StorageData).DecodeEventRecords(meta, &events)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-			for _, e := range events.DepDns_DnsRecord {
+				for _, e := range events.DepDns_DnsRecord {
 
-				log.Println(e)
-				if e.RecordType == 1 {
-					op := RecordOp{
-						Flag:    true,
-						Address: e.Name,
-						Ip:      e.Value,
+					log.Println(e)
+					if e.RecordType == 1 {
+						op := RecordOp{
+							Flag:    true,
+							Address: e.Name,
+							Ip:      e.Value,
+						}
+						rchain <- op
 					}
-					rchain <- op
+
+				}
+
+				for _, e := range events.DepDns_DnsRecordRemoved {
+					if e.RecordType == 1 {
+						op := RecordOp{
+							Flag:    false,
+							Address: e.Name,
+						}
+						rchain <- op
+					}
 				}
 
 			}
-
-			for _, e := range events.DepDns_DnsRecordRemoved {
-				if e.RecordType == 1 {
-					op := RecordOp{
-						Flag:    false,
-						Address: e.Name,
-					}
-					rchain <- op
-				}
+		case err := <-sub.Err():
+			{
+				log.Println(err)
+				return err
 			}
-
 		}
+
 	}
+
 }
